@@ -6,32 +6,44 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import os
 
 # 1. Page Configuration
 st.set_page_config(page_title="HAR Dashboard", page_icon="🏃", layout="wide")
 
 # 2. Data Loading (Cached for performance)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_PATH = os.path.join(BASE_DIR, 'WISDM_ar_v1.1_raw.txt')
+
 @st.cache_data
 def load_data():
-    DATA_PATH = 'WISDM_ar_v1.1_raw.txt'
     records = []
+
     with open(DATA_PATH, 'r', encoding='utf-8', errors='ignore') as f:
         for line in f:
             line = line.strip()
-            if not line: continue
+            if not line:
+                continue
+
             for seg in line.split(';'):
                 seg = seg.strip().strip(',')
-                if not seg: continue
+                if not seg:
+                    continue
+
                 parts = [p.strip() for p in seg.split(',') if p.strip() != '']
+
                 if len(parts) == 6:
                     records.append(parts)
-    
+
     df = pd.DataFrame(records, columns=['user', 'activity', 'timestamp', 'x', 'y', 'z'])
     df['user'] = df['user'].astype(int)
+
     for col in ['timestamp', 'x', 'y', 'z']:
         df[col] = pd.to_numeric(df[col], errors='coerce')
-    
+
     df = df.dropna().sort_values('timestamp').reset_index(drop=True)
+
     return df
 
 # Load data
